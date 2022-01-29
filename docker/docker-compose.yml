@@ -1,0 +1,100 @@
+version: "3"
+services:
+  worker1:
+    build:
+      context: spark/.
+    container_name: worker1 
+    networks:
+      default:
+         ipv4_address: 172.16.0.3
+    extra_hosts:
+      - "master: 172.16.0.2"
+      - "worker2: 172.16.0.4"
+    command: bash -c  "
+         etc/init.d/ssh restart 
+         && start-slave.sh spark://master:7077
+         && tail -f /dev/null"
+    ports:
+      - 22:22
+    hostname: worker1
+    restart: always
+  worker2:
+    build: 
+      context: spark/.
+    container_name: worker2
+    networks:
+      default:
+         ipv4_address: 172.16.0.4
+    extra_hosts:
+        - "master: 172.16.0.2"
+        - "worker1: 172.16.0.3"
+    command: bash -c  "
+         etc/init.d/ssh restart
+         && start-slave.sh spark://master:7077
+         && tail -f /dev/null"
+    ports:
+      - 22:22
+    hostname: worker2
+    restart: always
+  master:
+    build:
+      context: spark/.
+      args: 
+           FORMAT_NAMENODE_COMMAND: hdfs namenode -format
+    container_name: master
+    networks:
+      default:
+         ipv4_address: 172.16.0.2
+    extra_hosts:
+      - "worker1: 172.16.0.3"
+      - "worker2: 172.16.0.4"
+    command: bash -c  "
+        etc/init.d/ssh restart
+        && /usr/local/hadoop/sbin/start-all.sh
+        && $SPARK_HOME/sbin/start-master.sh
+        && $SPARK_HOME/sbin/start-history-server.sh
+        && hdfs dfs -mkdir -p /spark-logs
+        && cron
+        && luigid --port 8084"
+    ports:
+      - 50070:50070
+      - 8088:8088
+      - 22:22
+      - 8080:8080
+      - 4040:4040
+      - 8084:8084
+      - 18080:18080
+    hostname: master
+    restart: always
+  redis:
+    image: redis
+    container_name: redis
+    networks:
+      default:
+        ipv4_address: 172.16.0.5
+    command: bash -c "
+        redis-server --protected-mode no"
+    hostname: redis
+    restart: always
+  server:
+    build:
+      context: ./server
+    container_name: server
+    networks:
+      default:
+        ipv4_address: 172.16.0.6
+    extra_hosts:
+        - "redis: 172.16.0.5"
+    command: bash -c "
+        git pull
+        && gradle build
+        && gradle run"
+    ports:
+      - 9090:9090
+    hostname: server
+    restart: always
+
+networks:
+  default:
+    external:
+      name: spark-network

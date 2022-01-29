@@ -1,0 +1,7 @@
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+HADOOP_HOME=/usr/local/hadoop
+HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+LUIGI_CONFIG_PATH=/job/luigi.cfg
+PYTHONPATH=/job/.
+*/30 * * * * /usr/local/bin/luigi --module main HourlyExtract >> /job/cron.log 2>&1
+*/60 * * * * python3 /job/createData/main.py >> /job/cron.log 2>&1

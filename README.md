@@ -3,7 +3,7 @@
 
 ## ***INTRODUCTION***
 * Project workflow: 
-  * Data is created every 30 minutes in hdfs
+  * Data is created every 30 minutes in hdfs.
   * Transform by spark and sent request save data to middleware server every hour. 
   * Middleware server will save database to redis.
   * Luigi is responsible for scheduler.
@@ -30,6 +30,10 @@
         <td>11</td>
     </tr>  
     <tr>
+        <td>Luigi</td>
+        <td>2.8.13</td>
+    </tr>
+    <tr>
         <td>Docker</td>
         <td>20.10.5</td>
     </tr>
@@ -49,5 +53,5 @@
 * Create *hadoop-network* with command: `docker network create --driver bridge spark-network --subnet=172.16.0.0/16`.
 * Then, you go into the project and run command to build the hadoop cluster: `docker-compose build`.
 * Final, you run: `docker-compose up -d`.
-* Check result every 30 minutes in [HDFS UI](http://localhost:50070).
+* Check result every hour in [HDFS UI](http://localhost:50070).
 
